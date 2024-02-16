@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from hex_dataset import HexDataset
 from model import GPT
-from utils import instantiate_configs
+from utils import instantiate_configs, send_mail
 
 BASE_PATH = "/home/ubuntu/state2vec/"
 TRACES_PATH = BASE_PATH + "data/traces"
@@ -23,7 +23,15 @@ def main():
         logging.info(f"{field_name}: {field_value}")
     logging.info("Configs Loaded!")
 
-    # change here
+    model = GPT(config)
+    # Optimizer and loss function
+    optimizer = Adam(model.parameters(), lr=config.learning_rate)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    torch.save(model, '/models/s2v-gpt_base.pth')
+
+    model.to(device)
+
     TRAINING_SET_PATH = f"experiments/exp{config.exp_num}/training.set"
     EXP_FILE = open(TRAINING_SET_PATH)
     EXP_TRACES = []
@@ -34,13 +42,11 @@ def main():
                 ] + ".tar.gz"
         EXP_TRACES.append(trace)
 
-    # eliminate done traces
-
-    for trace in EXP_TRACES:
+    for index, trace in enumerate(EXP_TRACES):
+        index += 1
+        logging.info(f"Trace {index}/{len(EXP_TRACES)}")
         logging.info(f"Starting for {trace}")
         trace_file_path = TRACES_PATH + "/" + trace
-
-        # trace_file_path = "benign.066165f874547a1cfabce372f202b70bc49f048e1d9a3b758b81df8fa549bd70.trace_12bit.txt"
 
         dataset = HexDataset(
             file_path=trace_file_path,
@@ -48,20 +54,10 @@ def main():
         )
 
         dataloader = DataLoader(dataset, batch_size=config.batch_size, shuffle=True)
-        logging.info(f"Data loaded!")
-
-        model = GPT(config)
-
-        # Optimizer and loss function
-        optimizer = Adam(model.parameters(), lr=config.learning_rate)
-
-        # Training parameters
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        model.to(device)
+        logging.info(f"Data Loaded!")
 
         logging.info("Starting training...")
-
+        avg_loss = 0
         for epoch in range(config.num_epochs):
             model.train()
             total_loss = 0
@@ -93,13 +89,16 @@ def main():
                 batch_progress.set_postfix({'train_loss': batch_loss}, refresh=True)
 
             avg_loss = total_loss / len(dataloader)
-            print(f'\t --> Epoch {epoch + 1}/{config.num_epochs}, Final Train Loss: {avg_loss:.4f}')
+            logging.info(f'\t --> Epoch {epoch + 1}/{config.num_epochs}, Final Train Loss: {avg_loss:.4f}')
 
-        logging.info("Training Finished. Saving model...")
-        # torch.save(model.state_dict(), "s2v-gpt_model_state.pth")
-        # torch.save(model, 's2v-gpt.pth')
-        # logging.info("Model Saved. Exiting...")
-        break
+        logging.info("Training Finished! Saving model...")
+        torch.save(model, f'/models/s2v-gpt_{index}.pth')
+        torch.save(model, f'/models/s2v-gpt_latest.pth')
+        logging.info("Model Saved!")
+        send_mail(f"Model trained with {trace}. \nTraining Loss:{avg_loss}")
+        if index == 5:
+            break
+    send_mail(f"Model training done!")
 
 
 if __name__ == "__main__":

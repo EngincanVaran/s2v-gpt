@@ -1,3 +1,4 @@
+import smtplib
 from dataclasses import fields
 import yaml
 
@@ -48,3 +49,20 @@ def instantiate_configs(yaml_path: str) -> GPTConfig:
     filtered_config_data = {k: v for k, v in config_data.items() if k in valid_attrs}
 
     return GPTConfig(**filtered_config_data)
+
+
+def send_mail(body, subject="S2V-GPT Update!"):
+    BOT_PASSWORD = "govfwswxpxwkoziq"
+    BOT_EMAIL = "crypto.bot.penguin@gmail.com"
+    EMAIL = "evaran@sabanciuniv.edu"
+
+    with smtplib.SMTP('smtp.gmail.com', 587) as smtp:
+        smtp.ehlo()
+        smtp.starttls()
+        smtp.ehlo()
+
+        smtp.login(BOT_EMAIL, BOT_PASSWORD)
+
+        msg = f'Subject: {subject} \n\n{body}'
+
+        smtp.sendmail(BOT_EMAIL, EMAIL, msg)
