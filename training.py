@@ -19,6 +19,7 @@ class ColoredFormatter(logging.Formatter):
 
 
 def main():
+    logging.info(f"Cuda Available: {torch.cuda.is_available()}")
     config = instantiate_configs("configs.yaml")
     logging.debug("Configs Loaded!")
     trace_file_path = "benign.066165f874547a1cfabce372f202b70bc49f048e1d9a3b758b81df8fa549bd70.trace_12bit.txt"
@@ -37,7 +38,6 @@ def main():
     optimizer = Adam(model.parameters(), lr=config.learning_rate)
 
     # Training parameters
-    logging.info(f"Cuda Available: {torch.cuda.is_available()}")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model.to(device)
