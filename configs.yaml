@@ -7,7 +7,7 @@ learning_rate: 0.001
 vocab_size: 4096  # The size of the vocabulary
 n_layer: 8  # The number of transformer layers
 n_head: 4  # The number of attention heads in each transformer layer
-n_embd: 64  # The dimensionality of embeddings and hidden layers
+n_embd: 256  # The dimensionality of embeddings and hidden layers
 block_size: 64  # The maximum length of input sequences
 
 # Regularization and optimization
