@@ -112,7 +112,9 @@ def main():
         DETAILS_JSON[trace] = True
         with open("./experiments/exp1/details.json", "w") as f:
             json.dump(DETAILS_JSON, f)
-        send_mail(f"Model trained with {trace}. \nTraining Loss:{avg_loss}")
+
+        if index == 15:
+            send_mail(json.dumps(DETAILS_JSON))
     send_mail(f"Model training done!")
 
     with open("./experiments/exp1/details.json", "w") as f:
