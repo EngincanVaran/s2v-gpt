@@ -1,14 +1,14 @@
 # Basic training parameters
 batch_size: 1024 # Number of samples processed before the model is updated
 num_epochs: 1
-learning_rate: 0.001
+learning_rate: 0.0001
 
 # Model configuration
 vocab_size: 4096  # The size of the vocabulary
-n_layer: 8  # The number of transformer layers
-n_head: 4  # The number of attention heads in each transformer layer
-n_embd: 128  # The dimensionality of embeddings and hidden layers
-block_size: 64  # The maximum length of input sequences
+n_layer: 12  # The number of transformer layers
+n_head: 8  # The number of attention heads in each transformer layer
+n_embd: 64  # The dimensionality of embeddings and hidden layers
+block_size: 32  # The maximum length of input sequences
 
 # Regularization and optimization
 dropout: 0.5  # Dropout rate to prevent overfitting
