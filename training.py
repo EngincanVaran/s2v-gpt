@@ -28,7 +28,7 @@ def main():
     optimizer = Adam(model.parameters(), lr=config.learning_rate)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    torch.save(model, '/models/s2v-gpt_base.pth')
+    torch.save(model, './models/s2v-gpt_base.pth')
 
     model.to(device)
 
@@ -92,8 +92,8 @@ def main():
             logging.info(f'\t --> Epoch {epoch + 1}/{config.num_epochs}, Final Train Loss: {avg_loss:.4f}')
 
         logging.info("Training Finished! Saving model...")
-        torch.save(model, f'/models/s2v-gpt_{index}.pth')
-        torch.save(model, f'/models/s2v-gpt_latest.pth')
+        torch.save(model, f'./models/s2v-gpt_{index}.pth')
+        torch.save(model, f'./models/s2v-gpt_latest.pth')
         logging.info("Model Saved!")
         send_mail(f"Model trained with {trace}. \nTraining Loss:{avg_loss}")
         if index == 5:
