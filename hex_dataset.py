@@ -24,7 +24,7 @@ class HexDataset(Dataset):
                 break
         tar.close()
         encoded_data = torch.tensor(utils.encode(data))
-        return encoded_data
+        return encoded_data[:1000]
 
     def __len__(self):
         return len(self.data) - self.block_size

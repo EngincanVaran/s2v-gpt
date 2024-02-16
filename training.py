@@ -1,4 +1,6 @@
+import json
 import logging
+import os
 from dataclasses import fields
 
 import torch
@@ -23,14 +25,21 @@ def main():
         logging.info(f"{field_name}: {field_value}")
     logging.info("Configs Loaded!")
 
-    model = GPT(config)
-    # Optimizer and loss function
+    if os.path.exists('./models/s2v-gpt_latest.pth'):
+        model = torch.load("./models/s2v-gpt_latest.pth")
+    else:
+        model = GPT(config)
+        # Optimizer and loss function
+        torch.save(model, './models/s2v-gpt_base.pth')
     optimizer = Adam(model.parameters(), lr=config.learning_rate)
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    torch.save(model, './models/s2v-gpt_base.pth')
-
     model.to(device)
+
+    DETAILS_JSON_PATH = f"experiments/exp{config.exp_num}/details.json"
+    DETAILS_JSON_FILE = open(DETAILS_JSON_PATH, "r")
+    DETAILS_JSON = json.load(DETAILS_JSON_FILE)
+    DETAILS_JSON_FILE.close()
 
     TRAINING_SET_PATH = f"experiments/exp{config.exp_num}/training.set"
     EXP_FILE = open(TRAINING_SET_PATH)
@@ -41,9 +50,14 @@ def main():
                 trace.find("/", trace.find("doc/") + 4)
                 ] + ".tar.gz"
         EXP_TRACES.append(trace)
+    EXP_FILE.close()
 
     for index, trace in enumerate(EXP_TRACES):
         index += 1
+        if DETAILS_JSON[trace]:
+            logging.info(f"Model trained with {trace}, skipping...")
+            continue
+
         logging.info(f"Trace {index}/{len(EXP_TRACES)}")
         logging.info(f"Starting for {trace}")
         trace_file_path = TRACES_PATH + "/" + trace
@@ -93,12 +107,16 @@ def main():
 
         logging.info("Training Finished! Saving model...")
         torch.save(model, f'./models/s2v-gpt_{index}.pth')
-        torch.save(model, f'./models/s2v-gpt_latest.pth')
+        torch.save(model, './models/s2v-gpt_latest.pth')
         logging.info("Model Saved!")
+        DETAILS_JSON[trace] = True
+        with open("./experiments/exp1/details.json", "w") as f:
+            json.dump(DETAILS_JSON, f)
         send_mail(f"Model trained with {trace}. \nTraining Loss:{avg_loss}")
-        if index == 5:
-            break
     send_mail(f"Model training done!")
+
+    with open("./experiments/exp1/details.json", "w") as f:
+        json.dump(DETAILS_JSON, f)
 
 
 if __name__ == "__main__":

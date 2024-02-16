@@ -2,7 +2,7 @@
 exp_num: 1
 
 # Basic training parameters
-batch_size: 1024 # Number of samples processed before the model is updated
+batch_size: 64 # Number of samples processed before the model is updated
 num_epochs: 1
 learning_rate: 0.001
 
