@@ -3,12 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class GPTConfig:
-    window_size: int = 32
-    lag: int = 1
-
     batch_size: int = 32
-    eval_iters: int = 500
-    max_iters: int = 5000
     num_epochs: int = 10
     learning_rate: float = 0.001
 
