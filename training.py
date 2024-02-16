@@ -1,4 +1,5 @@
 import logging
+from dataclasses import fields
 
 import torch
 from torch.optim import Adam
@@ -21,6 +22,10 @@ class ColoredFormatter(logging.Formatter):
 def main():
     logging.info(f"Cuda Available: {torch.cuda.is_available()}")
     config = instantiate_configs("configs.yaml")
+    for field in fields(config):
+        field_name = field.name
+        field_value = getattr(config, field_name)
+        logging.info(f"{field_name}: {field_value}")
     logging.debug("Configs Loaded!")
     trace_file_path = "benign.066165f874547a1cfabce372f202b70bc49f048e1d9a3b758b81df8fa549bd70.trace_12bit.txt"
 
