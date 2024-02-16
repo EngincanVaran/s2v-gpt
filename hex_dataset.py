@@ -1,3 +1,6 @@
+import logging
+import tarfile
+
 import torch
 from torch.utils.data import Dataset
 
@@ -10,8 +13,16 @@ class HexDataset(Dataset):
         self.data = self.load_and_encode(file_path)
 
     def load_and_encode(self, file_path):
-        with open(file_path, "r") as file:
-            data = [line.strip() for line in file.readlines()]
+        tar = tarfile.open(file_path)
+        data = []
+        for member in tar.getnames():
+            if "12bit" in member:
+                f = tar.extractfile(member)
+                data = f.readlines()
+                f = None
+                data = [line.rstrip().decode("utf-8") for line in data]
+                break
+        tar.close()
         encoded_data = torch.tensor(utils.encode(data))
         return encoded_data
 

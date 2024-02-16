@@ -1,3 +1,6 @@
+# EXPERIMENT_NUM
+exp_num: 1
+
 # Basic training parameters
 batch_size: 1024 # Number of samples processed before the model is updated
 num_epochs: 1
