@@ -37,6 +37,7 @@ def main():
     optimizer = Adam(model.parameters(), lr=config.learning_rate)
 
     # Training parameters
+    logging.info(f"Cuda Available: {torch.cuda.is_available()}")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model.to(device)
