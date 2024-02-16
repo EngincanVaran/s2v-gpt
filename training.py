@@ -82,7 +82,10 @@ def main():
         avg_loss = total_loss / len(dataloader)
         print(f'\t --> Epoch {epoch + 1}/{config.num_epochs}, Final Train Loss: {avg_loss:.4f}')
 
-    torch.save(model.state_dict(), "s2v-gpt")
+    logging.info("Training Finished. Saving model...")
+    torch.save(model.state_dict(), "s2v-gpt_model_state.pth")
+    torch.save(model, 's2v-gpt.pth')
+    logging.info("Model Saved. Exiting...")
 
 
 if __name__ == "__main__":
