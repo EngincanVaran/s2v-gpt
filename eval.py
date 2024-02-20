@@ -44,7 +44,7 @@ def main():
 
         for x, y in dataset:
             xb = x.to(device)
-            predictions = model.next_word_prob(xb)[0]
+            predictions = model.next_word_prob(xb)[0].cpu()
             top_20_indices = heapq.nlargest(100, range(len(predictions)), key=predictions.__getitem__)
 
             # Decode these indices
