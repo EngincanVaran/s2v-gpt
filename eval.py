@@ -52,7 +52,7 @@ def main():
             # Decode these indices
             decoded_indices = decode(top_20_indices)
             target = decode(y[0].tolist())
-            order = find_order_of_element(predictions, index)
+            order = find_order_of_element(predictions, y[0].tolist()[0])
             if target in decoded_indices:
                 t_count += 1
                 logging.info(f"True {order}")
@@ -60,7 +60,7 @@ def main():
                 f_count += 1
                 logging.info(f"False {order}")
 
-            if count == 1000:
+            if count == 100:
                 break
         logging.info(f"Total True Count: {t_count}")
         logging.info(f"Total False Count: {f_count}")
