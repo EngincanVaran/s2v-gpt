@@ -37,6 +37,8 @@ def decode(l):
     Returns:
     str: Decoded string.
     """
+    if isinstance(l, int):
+        l = [l]
     return ' '.join([itos[i] for i in l])
 
 

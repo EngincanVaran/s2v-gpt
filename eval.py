@@ -45,12 +45,13 @@ def main():
         for x, y in dataset:
             xb = x.to(device)
             predictions = model.next_word_prob(xb)[0]
-            top_20_indices = heapq.nlargest(20, range(len(predictions)), key=predictions.__getitem__)
+            top_20_indices = heapq.nlargest(100, range(len(predictions)), key=predictions.__getitem__)
 
             # Decode these indices
             decoded_indices = decode(top_20_indices)
             print("Top 20 Indices (Decoded):", decoded_indices)
-            print(decode([y[0][0]]))
+            print(y[0])
+            print(decode(y[0].tolist()))
             exit()
 
 
