@@ -3,8 +3,8 @@ import logging
 import torch
 
 from hex_dataset import HexDataset
-from model import GPT
-from utils import encode, decode, instantiate_configs
+import heapq
+from utils import decode
 
 BASE_PATH = "/home/ubuntu/state2vec/"
 TRACES_PATH = BASE_PATH + "data/traces"
@@ -14,7 +14,6 @@ def main():
     logging.info(f"Cuda Available: {torch.cuda.is_available()}")
 
     model = torch.load("./models/s2v-gpt_latest.pth")
-    model.eval()
     logging.info("Model Loaded - s2v-gpt_latest")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -45,9 +44,13 @@ def main():
 
         for x, y in dataset:
             xb = x.to(device)
-            predictions = model.next_word_prob(xb)
-            print(predictions)
-            print(y[0])
+            predictions = model.next_word_prob(xb)[0]
+            top_20_indices = heapq.nlargest(20, range(len(predictions)), key=predictions.__getitem__)
+
+            # Decode these indices
+            decoded_indices = decode(top_20_indices)
+            print("Top 20 Indices (Decoded):", decoded_indices)
+            print(decode(y[0]))
             exit()
 
 
