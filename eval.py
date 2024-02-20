@@ -4,7 +4,7 @@ import torch
 
 from hex_dataset import HexDataset
 import heapq
-from utils import decode
+from utils import decode, find_order_of_element
 
 BASE_PATH = "/home/ubuntu/state2vec/"
 TRACES_PATH = BASE_PATH + "data/traces"
@@ -51,8 +51,10 @@ def main():
             decoded_indices = decode(top_20_indices)
             print("Top 20 Indices (Decoded):", decoded_indices)
             target = decode(y[0].tolist())
-            print(target)
+            print("Target:", target)
             print(target in decoded_indices)
+            order = find_order_of_element(predictions, index)
+            print("Order:", order)
             exit()
 
 

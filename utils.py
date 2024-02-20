@@ -1,5 +1,7 @@
 import smtplib
 from dataclasses import fields
+
+import numpy as np
 import yaml
 
 from gpt_configs import GPTConfig
@@ -68,3 +70,13 @@ def send_mail(body, subject="S2V-GPT Update!"):
         msg = f'Subject: {subject} \n\n{body}'
 
         smtp.sendmail(BOT_EMAIL, EMAIL, msg)
+
+
+def find_order_of_element(array, index):
+    # Sort the array in descending order while keeping track of original indices
+    sorted_indices = np.argsort(array)[::-1]
+
+    # Find the order of the element with the given index
+    order = np.where(sorted_indices == index)[0][0] + 1  # Adding 1 to make it 1-based indexing
+
+    return order
