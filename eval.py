@@ -42,22 +42,29 @@ def main():
             block_size=32
         )
 
+        t_count = 0
+        f_count = 0
+        count = 0
         for x, y in dataset:
             xb = x.to(device)
             predictions = model.next_word_prob(xb)[0].cpu()
-            top_20_indices = heapq.nlargest(100, range(len(predictions)), key=predictions.__getitem__)
-
+            top_20_indices = heapq.nlargest(50, range(len(predictions)), key=predictions.__getitem__)
             # Decode these indices
             decoded_indices = decode(top_20_indices)
-            print("Top 20 Indices (Decoded):", decoded_indices)
             target = decode(y[0].tolist())
-            print("Target:", target)
-            print(target in decoded_indices)
             order = find_order_of_element(predictions, index)
-            print("Order:", order)
-            print("Prob:", predictions[order-1])
-            exit()
+            if target in decoded_indices:
+                t_count += 1
+                logging.info(f"True {order}")
+            else:
+                f_count += 1
+                logging.info(f"False {order}")
 
+            if count == 1000:
+                break
+        logging.info(f"Total True Count: {t_count}")
+        logging.info(f"Total False Count: {f_count}")
+        break
 
 if __name__ == "__main__":
     LOG_FORMAT = "%(asctime)s [%(levelname)s] %(message)s"
