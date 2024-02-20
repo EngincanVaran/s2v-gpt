@@ -55,6 +55,7 @@ def main():
             print(target in decoded_indices)
             order = find_order_of_element(predictions, index)
             print("Order:", order)
+            print("Prob:", predictions[order-1])
             exit()
 
 
