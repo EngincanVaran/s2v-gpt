@@ -50,8 +50,9 @@ def main():
             # Decode these indices
             decoded_indices = decode(top_20_indices)
             print("Top 20 Indices (Decoded):", decoded_indices)
-            print(y[0])
-            print(decode(y[0].tolist()))
+            target = decode(y[0].tolist())
+            print(target)
+            print(target in decoded_indices)
             exit()
 
 
