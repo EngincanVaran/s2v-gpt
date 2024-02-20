@@ -52,7 +52,7 @@ def main():
             # Decode these indices
             decoded_indices = decode(top_20_indices)
             target = decode(y[0].tolist())
-            order = find_order_of_element(predictions, y[0].tolist()[0])
+            order = find_order_of_element(predictions, y[0])
             if target in decoded_indices:
                 t_count += 1
                 logging.info(f"True {order}")
