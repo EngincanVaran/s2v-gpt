@@ -74,7 +74,7 @@ def send_mail(body, subject="S2V-GPT Update!"):
 
 def find_order_of_element(array, index):
     # Sort the array in descending order while keeping track of original indices
-    sorted_indices = np.argsort(array)[::-1]
+    sorted_indices = np.argsort(array)
 
     # Find the order of the element with the given index
     order = np.where(sorted_indices == index)[0][0] + 1  # Adding 1 to make it 1-based indexing
