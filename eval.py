@@ -15,6 +15,7 @@ def main():
 
     model = torch.load("./models/s2v-gpt_latest.pth")
     model.eval()
+    logging.info("Model Loaded - s2v-gpt_latest")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -43,7 +44,8 @@ def main():
         )
 
         for x, y in dataset:
-            print(x, y)
+            predictions = model.next_word_prob(x)
+            print(predictions)
             exit()
 
 
