@@ -44,8 +44,10 @@ def main():
         )
 
         for x, y in dataset:
-            predictions = model.next_word_prob(x)
+            xb = x.to(device)
+            predictions = model.next_word_prob(xb)
             print(predictions)
+            print(y[0])
             exit()
 
 
