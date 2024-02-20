@@ -48,7 +48,7 @@ def main():
         for x, y in dataset:
             xb = x.to(device)
             predictions = model.next_word_prob(xb)[0].cpu()
-            top_20_indices = heapq.nlargest(50, range(len(predictions)), key=predictions.__getitem__)
+            top_20_indices = heapq.nlargest(100, range(len(predictions)), key=predictions.__getitem__)
             # Decode these indices
             decoded_indices = decode(top_20_indices)
             target = decode(y[0].tolist())
@@ -60,8 +60,9 @@ def main():
                 f_count += 1
                 logging.info(f"False {order}")
 
-            if count == 100:
+            if count == 1000:
                 break
+            count += 1
         logging.info(f"Total True Count: {t_count}")
         logging.info(f"Total False Count: {f_count}")
         break
