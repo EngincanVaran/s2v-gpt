@@ -2,6 +2,7 @@ import logging
 
 import torch
 from torch.optim import Adam
+from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader, random_split
 from tqdm import tqdm
 
@@ -57,6 +58,7 @@ def main(configs):
 
 
     optimizer = Adam(model.parameters(), lr=configs.TRAINING.learning_rate)
+    scheduler = StepLR(optimizer, step_size=configs.TRAINING.step_size, gamma=configs.TRAINING.gamma)
 
     for index, trace in enumerate(EXP_TRACES):
         index += 1
@@ -115,6 +117,7 @@ def main(configs):
                     optimizer.zero_grad(set_to_none=True)
                     loss.backward()
                     optimizer.step()
+                    scheduler.step()
                     train_loss = loss.item()
                     if (
                         ((batch_idx % configs.TRAINING.eval_interval == 0 and batch_idx > 0) or

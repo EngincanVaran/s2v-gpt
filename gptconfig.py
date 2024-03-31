@@ -11,6 +11,8 @@ class TrainingConfigs:
     eval_interval: int
     learning_rate: float
     data_split: float
+    step_size: int
+    gamma: float
 
 @dataclass
 class ModelConfigs:
