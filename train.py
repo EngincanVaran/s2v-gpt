@@ -88,7 +88,7 @@ def main(configs):
             shuffle=True,
             num_workers=4,  # Adjust based on your system's specification
             pin_memory=True,  # If using a GPU, this can improve transfer speeds,
-            pin_memory_device=device,
+            pin_memory_device="cuda",
         )
 
         validation_dataloader = DataLoader(
@@ -97,7 +97,7 @@ def main(configs):
             shuffle=False,
             num_workers=4,  # Consistency with train_dataloader
             pin_memory=True,  # Helps with faster data transfer to GPU
-            pin_memory_device=device,
+            pin_memory_device="cuda",
         )
 
         logging.info("Starting Training...")
