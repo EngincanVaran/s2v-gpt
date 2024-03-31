@@ -13,17 +13,18 @@ BASE_PATH = "/home/ubuntu/state2vec/"
 TRACES_PATH = BASE_PATH + "data/traces"
 
 @torch.no_grad()
-def estimate_loss(model, train_dataloader, validation_dataloader, eval_iters, device):
+def estimate_loss(model, train_dataloader, validation_dataloader, device):
     out = {}
     model.eval()
     dataloaders = {
         'train': train_dataloader,
         'val': validation_dataloader,
     }
+    eval_over = len(validation_dataloader)
     for split, dataloader in dataloaders.items():
-        losses = torch.zeros(eval_iters)
+        losses = torch.zeros(eval_over)
         for k, (X, Y) in enumerate(dataloader):
-            if k >= eval_iters:
+            if k >= eval_over:
                 break
             X, Y = X.to(device), Y.to(device)  # Ensure data is on the correct device
             logits, loss = model(X, Y)
@@ -99,9 +100,10 @@ def main(configs):
             pin_memory=True,  # Helps with faster data transfer to GPU
             pin_memory_device="cuda",
         )
+        logging.info(f"Validation Size: {len(validation_dataloader)}")
 
         logging.info("Starting Training...")
-        for iter in range(configs.TRAINING.max_iters):
+        for iter in range(configs.TRAINING.epochs):
             model.train()
             val_loss = float("inf")
 
@@ -112,16 +114,16 @@ def main(configs):
                     optimizer.zero_grad(set_to_none=True)
                     loss.backward()
                     optimizer.step()
-
+                    train_loss = loss.item()
                     if (
                         (batch_idx % configs.TRAINING.eval_interval == 0 and batch_idx > 0) or
                         (batch_idx == len(train_dataloader) - 1)
                     ):
-                        losses = estimate_loss(model, train_dataloader, validation_dataloader,
-                                               configs.TRAINING.eval_interval, device)
+                        losses = estimate_loss(model, train_dataloader, validation_dataloader, device)
                         val_loss = f"{losses['val']:.4f}"
+                        train_loss = f"{losses['train']:.4f}"
                     pbar.update(1)
-                    pbar.set_postfix(loss=loss.item(), val_loss=val_loss)
+                    pbar.set_postfix(loss=train_loss, val_loss=val_loss)
 
             # losses = estimate_loss(model, train_dataloader, validation_dataloader, configs.TRAINING.eval_interval, device)
             # logging.info(f"Final: train loss {losses['train']:.4f} | val loss {losses['val']:.4f}")

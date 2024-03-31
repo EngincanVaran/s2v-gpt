@@ -7,7 +7,7 @@ class GlobalConfigs:
 @dataclass
 class TrainingConfigs:
     batch_size: int
-    max_iters: int
+    epochs: int
     eval_interval: int
     learning_rate: float
 
