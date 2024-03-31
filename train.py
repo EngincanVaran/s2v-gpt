@@ -105,7 +105,7 @@ def main(configs):
             model.train()
             val_loss = float("inf")
 
-            with (tqdm(total=len(train_dataloader), desc=f"Training Epoch {iter}:") as pbar):
+            with (tqdm(total=len(train_dataloader), desc=f"Epoch {iter}:") as pbar):
                 for batch_idx, (Xb, Yb) in enumerate(train_dataloader):
                     Xb, Yb = Xb.to(device), Yb.to(device)
                     logits, loss = model(Xb, Yb)
