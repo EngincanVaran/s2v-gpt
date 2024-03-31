@@ -74,7 +74,7 @@ def main(configs):
 
         # Define the sizes of the splits
         total_size = len(dataset)
-        train_size = int(0.8 * total_size)  # 80% of the dataset for training
+        train_size = int(configs.TRAINING.data_split * total_size)  # 80% of the dataset for training
         validation_size = total_size - train_size  # The rest for validation
 
         # logging.info(f"Data Split! {[train_size, validation_size]}")

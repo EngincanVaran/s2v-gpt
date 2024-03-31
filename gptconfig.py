@@ -10,6 +10,7 @@ class TrainingConfigs:
     epochs: int
     eval_interval: int
     learning_rate: float
+    data_split: float
 
 @dataclass
 class ModelConfigs:
