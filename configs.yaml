@@ -3,9 +3,9 @@ global_configs:
 
 training_configs:
   # Basic training parameters
-  batch_size: 1024 # Number of samples processed before the model is updated
-  max_iters: 3000
-  eval_interval: 300
+  batch_size: 128 # Number of samples processed before the model is updated
+  max_iters: 1000
+  eval_interval: 100
   learning_rate: 0.001
 
 model_configs:
