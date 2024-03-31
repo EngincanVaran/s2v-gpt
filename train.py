@@ -92,15 +92,16 @@ def main(configs):
             pin_memory_device="cuda",
         )
 
-        validation_dataloader = DataLoader(
-            validation_dataset,
-            batch_size=configs.TRAINING.batch_size,
-            shuffle=False,
-            num_workers=4,  # Consistency with train_dataloader
-            pin_memory=True,  # Helps with faster data transfer to GPU
-            pin_memory_device="cuda",
-        )
-        logging.info(f"Validation Size: {len(validation_dataloader)}")
+        if configs.TRAINING.data_split != 1:
+            validation_dataloader = DataLoader(
+                validation_dataset,
+                batch_size=configs.TRAINING.batch_size,
+                shuffle=False,
+                num_workers=4,  # Consistency with train_dataloader
+                pin_memory=True,  # Helps with faster data transfer to GPU
+                pin_memory_device="cuda",
+            )
+            logging.info(f"Validation Size: {len(validation_dataloader)}")
 
         logging.info("Starting Training...")
         for iter in range(configs.TRAINING.epochs):
@@ -116,8 +117,8 @@ def main(configs):
                     optimizer.step()
                     train_loss = loss.item()
                     if (
-                        (batch_idx % configs.TRAINING.eval_interval == 0 and batch_idx > 0) or
-                        (batch_idx == len(train_dataloader) - 1)
+                        ((batch_idx % configs.TRAINING.eval_interval == 0 and batch_idx > 0) or
+                        (batch_idx == len(train_dataloader) - 1)) and configs.TRAINING.data_split != 1
                     ):
                         losses = estimate_loss(model, train_dataloader, validation_dataloader, device)
                         val_loss = f"{losses['val']:.4f}"
