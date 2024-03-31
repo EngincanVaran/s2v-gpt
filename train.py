@@ -75,7 +75,9 @@ def main(configs):
         total_size = len(dataset)
         train_size = int(0.8 * total_size)  # 80% of the dataset for training
         validation_size = total_size - train_size  # The rest for validation
-        logging.info(f"Data Split! {[train_size, validation_size]}")
+
+        # logging.info(f"Data Split! {[train_size, validation_size]}")
+
         # Split the dataset
         train_dataset, validation_dataset = random_split(dataset, [train_size, validation_size])
 
