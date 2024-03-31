@@ -56,11 +56,10 @@ def main(configs):
         EXP_TRACES.append(trace)
     EXP_FILE.close()
 
-
-    optimizer = Adam(model.parameters(), lr=configs.TRAINING.learning_rate)
-    scheduler = StepLR(optimizer, step_size=configs.TRAINING.step_size, gamma=configs.TRAINING.gamma)
-
     for index, trace in enumerate(EXP_TRACES):
+        optimizer = Adam(model.parameters(), lr=configs.TRAINING.learning_rate)
+        scheduler = StepLR(optimizer, step_size=configs.TRAINING.step_size, gamma=configs.TRAINING.gamma)
+
         index += 1
 
         logging.info(f"Trace {index}/{len(EXP_TRACES)}")
@@ -117,7 +116,6 @@ def main(configs):
                     optimizer.zero_grad(set_to_none=True)
                     loss.backward()
                     optimizer.step()
-                    scheduler.step()
                     train_loss = loss.item()
                     if (
                         ((batch_idx % configs.TRAINING.eval_interval == 0 and batch_idx > 0) or
@@ -128,7 +126,7 @@ def main(configs):
                         train_loss = f"{losses['train']:.4f}"
                     pbar.update(1)
                     pbar.set_postfix(loss=train_loss, val_loss=val_loss)
-
+            scheduler.step()
             # losses = estimate_loss(model, train_dataloader, validation_dataloader, configs.TRAINING.eval_interval, device)
             # logging.info(f"Final: train loss {losses['train']:.4f} | val loss {losses['val']:.4f}")
         break
