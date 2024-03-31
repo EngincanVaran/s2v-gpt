@@ -101,29 +101,30 @@ def main(configs):
         )
 
         logging.info("Starting Training...")
-        val_loss = float("inf")
-        with tqdm(total=configs.TRAINING.max_iters, desc="Training") as pbar:
-            for iter in range(configs.TRAINING.max_iters):
-                total_loss = 0
-                model.train()
-                if (iter % configs.TRAINING.eval_interval == 0 and iter > 0) or iter == configs.TRAINING.max_iters-1:
-                    losses = estimate_loss(model, train_dataloader, validation_dataloader, configs.TRAINING.eval_interval, device)
-                    val_loss = f"{losses['val']:.4f}"
-                    # logging.info(f"Step {iter}: train loss {losses['train']:.4f} | val loss {losses['val']:.4f}")
+        for iter in range(configs.TRAINING.max_iters):
+            model.train()
+            val_loss = float("inf")
 
+            with (tqdm(total=len(train_dataloader), desc=f"Training Epoch {iter}:") as pbar):
                 for batch_idx, (Xb, Yb) in enumerate(train_dataloader):
                     Xb, Yb = Xb.to(device), Yb.to(device)
                     logits, loss = model(Xb, Yb)
                     optimizer.zero_grad(set_to_none=True)
                     loss.backward()
                     optimizer.step()
-                    total_loss += loss.item()
-                logging.info("Updated Training...")
-                average_loss = total_loss / len(train_dataloader)
-                pbar.update(1)
-                pbar.set_postfix(loss=average_loss, val_loss=val_loss)
-        losses = estimate_loss(model, train_dataloader, validation_dataloader, configs.TRAINING.eval_interval, device)
-        logging.info(f"Final: train loss {losses['train']:.4f} | val loss {losses['val']:.4f}")
+
+                    if (
+                        (batch_idx % configs.TRAINING.eval_interval == 0 and batch_idx > 0) or
+                        (batch_idx == len(train_dataloader) - 1)
+                    ):
+                        losses = estimate_loss(model, train_dataloader, validation_dataloader,
+                                               configs.TRAINING.eval_interval, device)
+                        val_loss = f"{losses['val']:.4f}"
+                    pbar.update(1)
+                    pbar.set_postfix(loss=loss.item(), val_loss=val_loss)
+
+            # losses = estimate_loss(model, train_dataloader, validation_dataloader, configs.TRAINING.eval_interval, device)
+            # logging.info(f"Final: train loss {losses['train']:.4f} | val loss {losses['val']:.4f}")
         break
 
 
