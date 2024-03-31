@@ -22,7 +22,7 @@ class HexDataset(Dataset):
                 data = [line.rstrip().decode("utf-8") for line in data]
                 break
         tar.close()
-        encoded_data = torch.tensor(utils.encode(data))[:10000]
+        encoded_data = torch.tensor(utils.encode(data))
         return encoded_data
 
     def __len__(self):
