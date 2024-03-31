@@ -39,7 +39,7 @@ def main(configs):
     logging.info(f"Using device: {device}")
 
     model = GPT(configs.MODEL)
-    m = model.to(device)
+    model.to(device)
 
     logging.info(f"# Parameters: {model.get_num_params() / 1e6:.2f}M")
 
@@ -111,13 +111,13 @@ def main(configs):
                     val_loss = f"{losses['val']:.4f}"
                     # logging.info(f"Step {iter}: train loss {losses['train']:.4f} | val loss {losses['val']:.4f}")
 
+                logging.info("Training...")
                 for batch_idx, (Xb, Yb) in enumerate(train_dataloader):
-                    Xb, Yb = Xb.to(device), Yb.to(device)
                     logits, loss = model(Xb, Yb)
                     optimizer.zero_grad(set_to_none=True)
                     loss.backward()
                     optimizer.step()
-
+                    logging.info("Training...")
                     total_loss += loss.item()
                     logging.info("Training...")
 
