@@ -1,18 +1,20 @@
-# EXPERIMENT_NUM
-exp_num: 1
+global_configs:
+  exp_num: 1
 
-# Basic training parameters
-batch_size: 2048 # Number of samples processed before the model is updated
-num_epochs: 1
-learning_rate: 0.001
+training_configs:
+  # Basic training parameters
+  batch_size: 16 # Number of samples processed before the model is updated
+  max_iters: 100
+  eval_interval: 10
+  learning_rate: 0.001
 
-# Model configuration
-vocab_size: 4096  # The size of the vocabulary
-n_layer: 10  # The number of transformer layers
-n_head: 8  # The number of attention heads in each transformer layer
-n_embd: 64  # The dimensionality of embeddings and hidden layers
-block_size: 32  # The maximum length of input sequences
-
-# Regularization and optimization
-dropout: 0.1  # Dropout rate to prevent overfitting
-bias: true  # Whether to include bias terms in linear layers
+model_configs:
+  # Model configuration
+  vocab_size: 4096  # The size of the vocabulary
+  n_layer: 4  # The number of transformer layers
+  n_head: 4  # The number of attention heads in each transformer layer
+  n_embd: 32  # The dimensionality of embeddings and hidden layers
+  block_size: 32  # The maximum length of input sequences
+  # Regularization and optimization
+  dropout: 0.1  # Dropout rate to prevent overfitting
+  bias: true  # Whether to include bias terms in linear layers

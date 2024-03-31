@@ -1,10 +1,12 @@
+import dataclasses
+import logging
 import smtplib
 from dataclasses import fields
 
 import numpy as np
 import yaml
 
-from gpt_configs import GPTConfig
+from gptconfig import TrainingConfigs, ModelConfigs, Config, GlobalConfigs
 
 
 def generate_hex_range():
@@ -44,15 +46,37 @@ def decode(l):
     return ' '.join([itos[i] for i in l])
 
 
-def instantiate_configs(yaml_path: str) -> GPTConfig:
-    with open(yaml_path, 'r') as file:
-        config_data = yaml.safe_load(file)
+def load_configs(file_path):
+    with open(file_path, 'r') as file:
+        config = yaml.safe_load(file)
 
-    # Ensure only valid attributes for GPTConfig are passed
-    valid_attrs = {field.name for field in fields(GPTConfig)}
-    filtered_config_data = {k: v for k, v in config_data.items() if k in valid_attrs}
+    global_configs = GlobalConfigs(**config['global_configs'])
+    training_configs = TrainingConfigs(**config['training_configs'])
+    model_configs = ModelConfigs(**config['model_configs'])
 
-    return GPTConfig(**filtered_config_data)
+    return Config(global_configs, training_configs, model_configs)
+
+
+def log_configs(config):
+    max_line_length = 60  # Adjust this based on your longest config line
+    logging.info("+" + "-" * (max_line_length + 2) + "+")
+    logging.info("|" + " Configs ".center(max_line_length + 2) + "|")
+    logging.info("+" + "-" * (max_line_length + 2) + "+")
+
+    for field in fields(config):
+        field_name = field.name
+        field_value = getattr(config, field_name)
+
+        if dataclasses.is_dataclass(field_value):
+            logging.info("|" + f" {field_name.upper()} ".ljust(max_line_length) + "       |")
+            for sub_field in fields(field_value):
+                sub_field_name = sub_field.name
+                sub_field_value = getattr(field_value, sub_field_name)
+                logging.info("|" + f"\t{sub_field_name.upper()}: {sub_field_value}".ljust(max_line_length) + "|")
+        else:
+            logging.info("|" + f" {field_name.upper()}: {field_value}".ljust(max_line_length) + "|")
+
+    logging.info("+" + "-" * (max_line_length + 2) + "+")
 
 
 def send_mail(body, subject="S2V-GPT Update!"):
@@ -75,6 +99,7 @@ def send_mail(body, subject="S2V-GPT Update!"):
 def find_order_of_element(array, index):
     # Sort the array in descending order while keeping track of original indices
     sorted_indices = np.argsort(array)
+    print(sorted_indices)
 
     # Find the order of the element with the given index
     order = np.where(sorted_indices == index)[0][0] + 1  # Adding 1 to make it 1-based indexing

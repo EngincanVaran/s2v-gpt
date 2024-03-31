@@ -1,4 +1,3 @@
-import logging
 import tarfile
 
 import torch
@@ -23,7 +22,7 @@ class HexDataset(Dataset):
                 data = [line.rstrip().decode("utf-8") for line in data]
                 break
         tar.close()
-        encoded_data = torch.tensor(utils.encode(data))
+        encoded_data = torch.tensor(utils.encode(data))[:1000]
         return encoded_data
 
     def __len__(self):

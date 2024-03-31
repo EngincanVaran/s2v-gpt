@@ -1,9 +1,20 @@
+"""
+Full definition of a GPT Language Model, all of it in this single file.
+References:
+1) the official GPT-2 TensorFlow implementation released by OpenAI:
+https://github.com/openai/gpt-2/blob/master/src/model.py
+2) huggingface/transformers PyTorch implementation:
+https://github.com/huggingface/transformers/blob/main/src/transformers/models/gpt2/modeling_gpt2.py
+"""
+import logging
 import math
 import inspect
 
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+
+from gpt_configs import GPTConfig
 
 
 class LayerNorm(nn.Module):
@@ -132,7 +143,7 @@ class GPT(nn.Module):
                 torch.nn.init.normal_(p, mean=0.0, std=0.02 / math.sqrt(2 * config.n_layer))
 
         # report number of parameters
-        # print("number of parameters: %.2fM" % (self.get_num_params() / 1e6,))
+        logging.info("# Parameters: %.2fM" % (self.get_num_params() / 1e6,))
 
     def get_num_params(self, non_embedding=True):
         """
@@ -145,6 +156,14 @@ class GPT(nn.Module):
         if non_embedding:
             n_params -= self.transformer.wpe.weight.numel()
         return n_params
+
+    def _init_weights(self, module):
+        if isinstance(module, nn.Linear):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
+            if module.bias is not None:
+                torch.nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.Embedding):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
     def forward(self, idx, targets=None):
         device = idx.device
@@ -170,59 +189,6 @@ class GPT(nn.Module):
             loss = None
 
         return logits, loss
-
-    @torch.no_grad()
-    def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None):
-        """
-        Take a conditioning sequence of indices idx (LongTensor of shape (b,t)) and complete
-        the sequence max_new_tokens times, feeding the predictions back into the model each time.
-        Most likely you'll want to make sure to be in model.eval() mode of operation for this.
-        """
-        for _ in range(max_new_tokens):
-            # if the sequence context is growing too long we must crop it at block_size
-            idx_cond = idx if idx.size(1) <= self.config.block_size else idx[:, -self.config.block_size:]
-            # forward the model to get the logits for the index in the sequence
-            logits, _ = self(idx_cond)
-            # pluck the logits at the final step and scale by desired temperature
-            logits = logits[:, -1, :] / temperature
-            # optionally crop the logits to only the top k options
-            if top_k is not None:
-                v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
-                logits[logits < v[:, [-1]]] = -float('Inf')
-            # apply softmax to convert logits to (normalized) probabilities
-            probs = F.softmax(logits, dim=-1)
-            # sample from the distribution
-            idx_next = torch.multinomial(probs, num_samples=1)
-            # append sampled index to the running sequence and continue
-            idx = torch.cat((idx, idx_next), dim=1)
-
-        return idx
-
-    def estimate_mfu(self, fwdbwd_per_iter, dt):
-        """ estimate model flops utilization (MFU) in units of A100 bfloat16 peak FLOPS """
-        # first estimate the number of flops we do per iteration.
-        # see PaLM paper Appendix B as ref: https://arxiv.org/abs/2204.02311
-        N = self.get_num_params()
-        cfg = self.config
-        L, H, Q, T = cfg.n_layer, cfg.n_head, cfg.n_embd // cfg.n_head, cfg.block_size
-        flops_per_token = 6 * N + 12 * L * H * Q * T
-        flops_per_fwdbwd = flops_per_token * T
-        flops_per_iter = flops_per_fwdbwd * fwdbwd_per_iter
-        # express our flops throughput as ratio of A100 bfloat16 peak flops
-        flops_achieved = flops_per_iter * (1.0 / dt)  # per second
-        flops_promised = 312e12  # A100 GPU bfloat16 peak flops is 312 TFLOPS
-        mfu = flops_achieved / flops_promised
-        return mfu
-
-    # probs not useful for us!
-
-    def _init_weights(self, module):
-        if isinstance(module, nn.Linear):
-            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
-            if module.bias is not None:
-                torch.nn.init.zeros_(module.bias)
-        elif isinstance(module, nn.Embedding):
-            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
     def crop_block_size(self, block_size):
         # model surgery to decrease the block size if necessary
@@ -260,3 +226,69 @@ class GPT(nn.Module):
         print(f"using fused AdamW: {use_fused}")
 
         return optimizer
+
+    def estimate_mfu(self, fwdbwd_per_iter, dt):
+        """ estimate model flops utilization (MFU) in units of A100 bfloat16 peak FLOPS """
+        # first estimate the number of flops we do per iteration.
+        # see PaLM paper Appendix B as ref: https://arxiv.org/abs/2204.02311
+        N = self.get_num_params()
+        cfg = self.config
+        L, H, Q, T = cfg.n_layer, cfg.n_head, cfg.n_embd // cfg.n_head, cfg.block_size
+        flops_per_token = 6 * N + 12 * L * H * Q * T
+        flops_per_fwdbwd = flops_per_token * T
+        flops_per_iter = flops_per_fwdbwd * fwdbwd_per_iter
+        # express our flops throughput as ratio of A100 bfloat16 peak flops
+        flops_achieved = flops_per_iter * (1.0 / dt)  # per second
+        flops_promised = 312e12  # A100 GPU bfloat16 peak flops is 312 TFLOPS
+        mfu = flops_achieved / flops_promised
+        return mfu
+
+    @torch.no_grad()
+    def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None):
+        """
+        Take a conditioning sequence of indices idx (LongTensor of shape (b,t)) and complete
+        the sequence max_new_tokens times, feeding the predictions back into the model each time.
+        Most likely you'll want to make sure to be in model.eval() mode of operation for this.
+        """
+        for _ in range(max_new_tokens):
+            # if the sequence context is growing too long we must crop it at block_size
+            idx_cond = idx if idx.size(1) <= self.config.block_size else idx[:, -self.config.block_size:]
+            # forward the model to get the logits for the index in the sequence
+            logits, _ = self(idx_cond)
+            # pluck the logits at the final step and scale by desired temperature
+            logits = logits[:, -1, :] / temperature
+            # optionally crop the logits to only the top k options
+            if top_k is not None:
+                v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
+                logits[logits < v[:, [-1]]] = -float('Inf')
+            # apply softmax to convert logits to (normalized) probabilities
+            probs = F.softmax(logits, dim=-1)
+            # sample from the distribution
+            idx_next = torch.multinomial(probs, num_samples=1)
+            # append sampled index to the running sequence and continue
+            idx = torch.cat((idx, idx_next), dim=1)
+
+        return idx
+
+    @torch.no_grad()
+    def next_word_prob(self, idx):
+        """
+        Given a conditioning sequence of indices idx (LongTensor of shape (b,t)),
+        return the probabilities of all possible next words in the vocabulary.
+        """
+        self.eval()  # Ensure the model is in evaluation mode to disable dropout, etc.
+
+        # Ensure idx is the right shape (adding batch dimension if necessary)
+        if idx.dim() == 1:
+            idx = idx.unsqueeze(0)  # Add batch dimension if it's not there
+
+        # Perform a forward pass to get logits for the next word
+        logits, _ = self(idx)
+
+        # Select the logits for the last token in the sequence
+        logits = logits[:, -1, :]
+
+        # Apply softmax to convert logits to probabilities
+        probs = torch.softmax(logits, dim=-1)
+
+        return probs

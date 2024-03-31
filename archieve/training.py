@@ -18,7 +18,7 @@ TRACES_PATH = BASE_PATH + "data/traces"
 
 def main():
     logging.info(f"Cuda Available: {torch.cuda.is_available()}")
-    config = instantiate_configs("configs.yaml")
+    config = instantiate_configs("../configs.yaml")
     for field in fields(config):
         field_name = field.name
         field_value = getattr(config, field_name)
@@ -110,14 +110,14 @@ def main():
         torch.save(model, './models/s2v-gpt_latest.pth')
         logging.info("Model Saved!")
         DETAILS_JSON[trace] = True
-        with open("./experiments/exp1/details.json", "w") as f:
+        with open("../experiments/exp1/details.json", "w") as f:
             json.dump(DETAILS_JSON, f)
 
         if index == 15:
             send_mail(json.dumps(DETAILS_JSON))
     send_mail(f"Model training done!")
 
-    with open("./experiments/exp1/details.json", "w") as f:
+    with open("../experiments/exp1/details.json", "w") as f:
         json.dump(DETAILS_JSON, f)
 
 
