@@ -82,8 +82,21 @@ def main(configs):
         train_dataset, validation_dataset = random_split(dataset, [train_size, validation_size])
 
         # Create DataLoaders for both training and validation sets
-        train_dataloader = DataLoader(train_dataset, batch_size=configs.TRAINING.batch_size, shuffle=True)
-        validation_dataloader = DataLoader(validation_dataset, batch_size=configs.TRAINING.batch_size, shuffle=False)
+        train_dataloader = DataLoader(
+            train_dataset,
+            batch_size=configs.TRAINING.batch_size,
+            shuffle=True,
+            num_workers=4,  # Adjust based on your system's specification
+            pin_memory=True  # If using a GPU, this can improve transfer speeds
+        )
+
+        validation_dataloader = DataLoader(
+            validation_dataset,
+            batch_size=configs.TRAINING.batch_size,
+            shuffle=False,
+            num_workers=4,  # Consistency with train_dataloader
+            pin_memory=True  # Helps with faster data transfer to GPU
+        )
 
         logging.info("Starting Training...")
         val_loss = float("inf")
