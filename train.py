@@ -113,6 +113,7 @@ def main(configs):
 
                 logging.info("Training...")
                 for batch_idx, (Xb, Yb) in enumerate(train_dataloader):
+                    Xb, Yb = Xb.to(device), Yb.to(device)
                     logits, loss = model(Xb, Yb)
                     optimizer.zero_grad(set_to_none=True)
                     loss.backward()
