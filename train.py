@@ -36,6 +36,17 @@ def estimate_loss(model, train_dataloader, validation_dataloader, device):
     return out
 
 
+def load_trace_files(path):
+    with open(path, "r") as EXP_FILE:
+        EXP_TRACES = []
+        for trace in EXP_FILE.readlines():
+            trace = trace[
+                    trace.find("doc/") + 4:
+                    trace.find("/", trace.find("doc/") + 4)
+                    ] + ".tar.gz"
+            EXP_TRACES.append(trace)
+    return EXP_TRACES
+
 
 def main(configs):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -47,15 +58,7 @@ def main(configs):
     logging.info(f"# Parameters: {model.get_num_params() / 1e6:.2f}M")
 
     TRAINING_SET_PATH = f"experiments/exp{configs.GLOBAL.exp_num}/training.set"
-    EXP_FILE = open(TRAINING_SET_PATH)
-    EXP_TRACES = []
-    for trace in EXP_FILE.readlines():
-        trace = trace[
-                trace.find("doc/") + 4:
-                trace.find("/", trace.find("doc/") + 4)
-                ] + ".tar.gz"
-        EXP_TRACES.append(trace)
-    EXP_FILE.close()
+    EXP_TRACES = load_trace_files(TRAINING_SET_PATH)
 
     for index, trace in enumerate(EXP_TRACES):
         optimizer = Adam(model.parameters(), lr=configs.TRAINING.learning_rate)
@@ -79,7 +82,6 @@ def main(configs):
         train_size = int(configs.TRAINING.data_split * total_size)  # 80% of the dataset for training
         validation_size = total_size - train_size  # The rest for validation
 
-        # logging.info(f"Data Split! {[train_size, validation_size]}")
 
         # Split the dataset
         train_dataset, validation_dataset = random_split(dataset, [train_size, validation_size])
@@ -129,19 +131,17 @@ def main(configs):
                         losses = estimate_loss(model, train_dataloader, validation_dataloader, device)
                         val_loss = f"{losses['val']:.4f}"
                         train_loss = f"{losses['train']:.4f}"
-
-                    plt.figure(figsize=(10, 6))
-                    plt.plot(history[iter], label='Loss')
-                    plt.title('Training Loss')
-                    plt.xlabel('Iterations')
-                    plt.ylabel('Loss')
-                    plt.legend()
-
-                    # Save the plot to a file
-                    plt.savefig(f'training_loss_{iter}.png')
-
                     pbar.update(1)
                     pbar.set_postfix(loss=train_loss, val_loss=val_loss)
+
+            plt.figure(figsize=(10, 6))
+            plt.plot(history[iter], label='Loss')
+            plt.title('Training Loss')
+            plt.xlabel('Iterations')
+            plt.ylabel('Loss')
+            plt.legend()
+            # Save the plot to a file
+            plt.savefig(f'training_loss_{iter}.png')
 
             scheduler.step()
             # losses = estimate_loss(model, train_dataloader, validation_dataloader, configs.TRAINING.eval_interval, device)
