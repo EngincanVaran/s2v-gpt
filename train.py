@@ -5,6 +5,7 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader, random_split
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 from hex_dataset import HexDataset
 from model import GPT
@@ -105,9 +106,11 @@ def main(configs):
             logging.info(f"Validation Size: {len(validation_dataloader)}")
 
         logging.info("Starting Training...")
+        history = {}
         for iter in range(configs.TRAINING.epochs):
             model.train()
             val_loss = float("inf")
+            history[iter] = []
 
             with (tqdm(total=len(train_dataloader), desc=f"Epoch {iter}:") as pbar):
                 for batch_idx, (Xb, Yb) in enumerate(train_dataloader):
@@ -117,6 +120,8 @@ def main(configs):
                     loss.backward()
                     optimizer.step()
                     train_loss = loss.item()
+                    history[iter].append(train_loss)
+
                     if (
                         ((batch_idx % configs.TRAINING.eval_interval == 0 and batch_idx > 0) or
                         (batch_idx == len(train_dataloader) - 1)) and configs.TRAINING.data_split != 1
@@ -124,8 +129,20 @@ def main(configs):
                         losses = estimate_loss(model, train_dataloader, validation_dataloader, device)
                         val_loss = f"{losses['val']:.4f}"
                         train_loss = f"{losses['train']:.4f}"
+
+                    plt.figure(figsize=(10, 6))
+                    plt.plot(history[iter], label='Loss')
+                    plt.title('Training Loss')
+                    plt.xlabel('Iterations')
+                    plt.ylabel('Loss')
+                    plt.legend()
+
+                    # Save the plot to a file
+                    plt.savefig(f'training_loss_{iter}.png')
+
                     pbar.update(1)
                     pbar.set_postfix(loss=train_loss, val_loss=val_loss)
+
             scheduler.step()
             # losses = estimate_loss(model, train_dataloader, validation_dataloader, configs.TRAINING.eval_interval, device)
             # logging.info(f"Final: train loss {losses['train']:.4f} | val loss {losses['val']:.4f}")
