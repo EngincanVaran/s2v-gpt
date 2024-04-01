@@ -134,7 +134,7 @@ def main(configs):
         torch.save(model, f'./models/{model_name}')
 
         DETAILS_JSON[trace]["trained"] = True
-        with open(f"../experiments/exp{configs.GLOBAL.exp_num}/details.json", "w") as f:
+        with open(f"experiments/exp{configs.GLOBAL.exp_num}/details.json", "w") as f:
             json.dump(DETAILS_JSON, f)
 
         if index % 15 == 0 or index == 1 or index == len(EXP_TRACES):
