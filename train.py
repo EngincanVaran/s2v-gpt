@@ -7,9 +7,10 @@ from torch.utils.data import DataLoader, random_split
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
+import utils
 from hex_dataset import HexDataset
 from model import GPT
-from utils import load_configs, log_configs
+from utils import load_configs, log_configs, send_mail
 
 BASE_PATH = "/home/ubuntu/state2vec/"
 TRACES_PATH = BASE_PATH + "data/traces"
@@ -37,6 +38,7 @@ def estimate_loss(model, train_dataloader, validation_dataloader, device):
 
 
 def load_trace_files(path):
+    logging.info("Loading trace files...")
     with open(path, "r") as EXP_FILE:
         EXP_TRACES = []
         for trace in EXP_FILE.readlines():
@@ -82,7 +84,6 @@ def main(configs):
         train_size = int(configs.TRAINING.data_split * total_size)  # 80% of the dataset for training
         validation_size = total_size - train_size  # The rest for validation
 
-
         # Split the dataset
         train_dataset, validation_dataset = random_split(dataset, [train_size, validation_size])
 
@@ -108,7 +109,9 @@ def main(configs):
             logging.info(f"Validation Size: {len(validation_dataloader)}")
 
         logging.info("Starting Training...")
+
         history = {}
+
         for iter in range(configs.TRAINING.epochs):
             model.train()
             val_loss = float("inf")
@@ -147,6 +150,7 @@ def main(configs):
             # losses = estimate_loss(model, train_dataloader, validation_dataloader, configs.TRAINING.eval_interval, device)
             # logging.info(f"Final: train loss {losses['train']:.4f} | val loss {losses['val']:.4f}")
         break
+    send_mail("S2V-GPT Update!", "Training finished!")
 
 
 if __name__ == "__main__":
