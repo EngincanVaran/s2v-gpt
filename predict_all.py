@@ -44,6 +44,7 @@ def main(configs):
 
     model.to(device)
     logging.info(f"# Parameters: {model.get_num_params() / 1e6:.2f}M")
+    logging.info(f"Threshold: {round(configs.PREDICTION.top_k / configs.MODEL.vocab_size, 4)}")
 
     TESTING_SET_PATH = f"experiments/exp{configs.GLOBAL.exp_num}/test.set"
     EXP_TRACES = load_trace_files(TESTING_SET_PATH)
@@ -75,7 +76,7 @@ def main(configs):
         )
         prediction_string = ""
         # Wrap your dataloader with tqdm for a progress bar
-        for batch_idx, (Xb, Yb) in enumerate(tqdm(train_dataloader, desc="Processing batches:")):
+        for batch_idx, (Xb, Yb) in enumerate(tqdm(train_dataloader, desc="Processing batches")):
             Xb, Yb = Xb.to(device), Yb.to(device)
             y_pred = model.get_next_word_probs(Xb)
             values, indices = torch.topk(y_pred, k=configs.PREDICTION.top_k, dim=1)
