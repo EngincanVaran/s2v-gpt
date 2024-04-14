@@ -2,7 +2,7 @@ global_configs:
   exp_num: 1
 
 prediction_configs:
-  max_workers: 10
+  max_workers: 5
   batch_size: 20000
   top_k: 21
 
