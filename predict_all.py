@@ -79,6 +79,7 @@ def main(configs):
         prediction_string = ""
         # Wrap your dataloader with tqdm for a progress bar
         for batch_idx, (Xb, Yb) in enumerate(tqdm(train_dataloader, desc="Processing batches:")):
+            Xb = Xb.to(device)
             y_pred = model.get_next_word_probs(Xb)
             values, indices = torch.topk(y_pred, k=21, dim=1)
             # Ensure Yb is correctly reshaped for comparison
