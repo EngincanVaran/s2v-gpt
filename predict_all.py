@@ -48,7 +48,7 @@ def main(configs):
     model.to(device)
     logging.info(f"# Parameters: {model.get_num_params() / 1e6:.2f}M")
 
-    TESTING_SET_PATH = f"experiments/{configs.GLOBAL.exp_num}/test.set"
+    TESTING_SET_PATH = f"experiments/exp{configs.GLOBAL.exp_num}/test.set"
     EXP_TRACES = load_trace_files(TESTING_SET_PATH)
 
     for index, trace in enumerate(EXP_TRACES):
@@ -100,7 +100,7 @@ def main(configs):
             send_mail(f"Prediction continues {index}/{len(EXP_TRACES)}")
 
     send_mail(f"Predictions done!")
-    with open(f"../results/{configs.GLOBAL.exp_num}/prediction_details.json", "w") as f:
+    with open(f"../results/exp{configs.GLOBAL.exp_num}/prediction_details.json", "w") as f:
         json.dump(DETAILS_JSON, f)
 
 
