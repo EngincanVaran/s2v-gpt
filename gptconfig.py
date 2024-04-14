@@ -5,6 +5,11 @@ class GlobalConfigs:
     exp_num: int
 
 @dataclass
+class PredictionConfigs:
+    batch_size: int
+    top_k: int
+
+@dataclass
 class TrainingConfigs:
     batch_size: int
     epochs: int
@@ -28,3 +33,4 @@ class Config:
     GLOBAL: GlobalConfigs
     TRAINING: TrainingConfigs
     MODEL: ModelConfigs
+    PREDICTION: PredictionConfigs

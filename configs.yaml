@@ -1,6 +1,10 @@
 global_configs:
   exp_num: 1
 
+prediction_configs:
+  batch_size: 20000
+  top_k: 21
+
 training_configs:
   # Basic training parameters
   batch_size: 4096 # Number of samples processed before the model is updated

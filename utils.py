@@ -6,7 +6,7 @@ from dataclasses import fields
 import numpy as np
 import yaml
 
-from gptconfig import TrainingConfigs, ModelConfigs, Config, GlobalConfigs
+from gptconfig import TrainingConfigs, ModelConfigs, Config, GlobalConfigs, PredictionConfigs
 
 
 def generate_hex_range():
@@ -53,8 +53,9 @@ def load_configs(file_path):
     global_configs = GlobalConfigs(**config['global_configs'])
     training_configs = TrainingConfigs(**config['training_configs'])
     model_configs = ModelConfigs(**config['model_configs'])
+    prediction_configs = PredictionConfigs(**config['prediction_configs'])
 
-    return Config(global_configs, training_configs, model_configs)
+    return Config(global_configs, training_configs, model_configs, prediction_configs)
 
 
 def log_configs(config):

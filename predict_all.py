@@ -2,13 +2,10 @@ import logging
 import os.path
 import json
 import torch
-from torch.optim import Adam
-from torch.optim.lr_scheduler import StepLR, MultiStepLR
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from hex_dataset import HexDataset
-from model import GPT
 from utils import load_configs, log_configs, send_mail
 
 BASE_PATH = "/home/ubuntu/state2vec/"
@@ -70,7 +67,7 @@ def main(configs):
         # Create DataLoaders for training
         train_dataloader = DataLoader(
             dataset,
-            batch_size=configs.TRAINING.batch_size,
+            batch_size=configs.PREDICTION.batch_size,
             shuffle=False,
             num_workers=4,  # Adjust based on your system's specification
             pin_memory=True,  # If using a GPU, this can improve transfer speeds,
@@ -81,7 +78,7 @@ def main(configs):
         for batch_idx, (Xb, Yb) in enumerate(tqdm(train_dataloader, desc="Processing batches:")):
             Xb, Yb = Xb.to(device), Yb.to(device)
             y_pred = model.get_next_word_probs(Xb)
-            values, indices = torch.topk(y_pred, k=21, dim=1)
+            values, indices = torch.topk(y_pred, k=configs.PREDICTION.top_k, dim=1)
             # Ensure Yb is correctly reshaped for comparison
             true_indices = Yb[:, 0].unsqueeze(1)  # Adjust as necessary based on your data structure
 
