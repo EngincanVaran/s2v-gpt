@@ -2,12 +2,13 @@ global_configs:
   exp_num: 1
 
 prediction_configs:
+  max_workers: 10
   batch_size: 20000
   top_k: 21
 
 training_configs:
   # Basic training parameters
-  batch_size: 4096 # Number of samples processed before the model is updated
+  batch_size: 8 # 4096 # Number of samples processed before the model is updated
   epochs: 5
   eval_interval: 100
   learning_rate: 0.001

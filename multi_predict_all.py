@@ -26,22 +26,21 @@ def load_trace_files(path):
     return EXP_TRACES
 
 
-def process_trace(trace, device, model, configs):
+def process_trace(trace, model, configs):
     logging.info(f"Starting for {trace}...")
     trace_file_path = TRACES_PATH + "/" + trace
     trace_dataset = HexDataset(trace_file_path)
-    trace_dataloader = DataLoader(trace_dataset, batch_size=1, shuffle=False)
+    trace_dataloader = DataLoader(trace_dataset, batch_size=configs.PREDICTION.batch_size, shuffle=False)
 
     prediction_string = ""
     for batch_idx, (Xb, Yb) in enumerate(tqdm(trace_dataloader, desc="Processing batches")):
-        Xb, Yb = Xb.to(device), Yb.to(device)
         y_pred = model.get_next_word_probs(Xb)
         values, indices = torch.topk(y_pred, k=configs.PREDICTION.top_k, dim=1)
         matches = torch.any(indices == Yb[:, 0].unsqueeze(1), dim=1)
         prediction_string += ''.join(['T' if match else 'F' for match in matches])
 
     logging.info("Writing Predictions!")
-    with open(f'results/exp{configs.GLOBAL.exp_num}/{trace}.prediction_string', "w") as f:
+    with open(f'results/exp{configs.GLOBAL.exp_num}/{trace}.prediction_string.txt', "w") as f:
         f.write(prediction_string)
 
     # Assuming 'details.json' keeps track of which traces have been processed
@@ -52,15 +51,16 @@ def process_trace(trace, device, model, configs):
 
 
 def main(configs):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = "cpu"
     model_name = "s2v-gpt_1_latest.pt"
     model = torch.load(f'./models/{model_name}')
     model.to(device)
 
     EXP_TRACES = load_trace_files(f"experiments/exp{configs.GLOBAL.exp_num}/test.set")
 
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        future_to_trace = {executor.submit(process_trace, trace, device, model, configs): trace for trace in EXP_TRACES}
+    with ThreadPoolExecutor(max_workers=configs.PREDICTION.max_workers) as executor:
+        future_to_trace = {executor.submit(process_trace, trace, model, configs): trace for trace in EXP_TRACES}
 
         for future in as_completed(future_to_trace):
             trace = future_to_trace[future]
