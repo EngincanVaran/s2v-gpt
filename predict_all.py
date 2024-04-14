@@ -33,7 +33,7 @@ def main(configs):
     logging.info(f"Using device: {device}")
     model_name = f"s2v-gpt_1_latest.pt"
 
-    DETAILS_JSON_PATH = f"results/{configs.GLOBAL.exp_num}/prediction_details.json"
+    DETAILS_JSON_PATH = f"results/exp{configs.GLOBAL.exp_num}/prediction_details.json"
     DETAILS_JSON_FILE = open(DETAILS_JSON_PATH, "r")
     DETAILS_JSON = json.load(DETAILS_JSON_FILE)
     DETAILS_JSON_FILE.close()
