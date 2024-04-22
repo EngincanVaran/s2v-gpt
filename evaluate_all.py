@@ -29,7 +29,7 @@ def apply_sliding_window(data, suspiciousWindowSize, lag, suspicious_threshold):
 def main():
     with open("benign_malicious_info.json", "r") as f:
         benign_malicious_info = json.load(f)
-
+    results = {}
     trace_list = os.listdir("results/exp1")
 
     for index, trace in enumerate(trace_list):
@@ -37,11 +37,18 @@ def main():
         index = trace.find(".tar.gz")
         trace_name = trace[:index]
         TRUTH = benign_malicious_info[trace_name]
-        logging.info(f"Starting for {trace_name} - {TRUTH}")
+        logging.info(f"Starting for {trace_name} | {TRUTH}")
         data = read_trace(trace_path)
-        label, max_s = apply_sliding_window(data, 50000, 1, 0.5)
+        label, max_s = apply_sliding_window(data, 50000, 1, 0.9)
         logging.info(f"Label: {label}\tMax_Suspicious: {max_s}")
-        break
+        results[trace_name] = {
+            "Truth": TRUTH,
+            "Label": label,
+            "MaxSuspicious": max_s
+        }
+
+    with open("results/exp1/results.json", "w") as f:
+        json.dump(results, f)
 
 
 if __name__ == "__main__":
