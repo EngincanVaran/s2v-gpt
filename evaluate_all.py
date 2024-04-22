@@ -1,6 +1,8 @@
 import logging
 import json
 import os
+from tqdm import tqdm
+from utils import load_configs, log_configs, send_mail
 
 
 def read_trace(path):
@@ -26,26 +28,40 @@ def apply_sliding_window(data, suspiciousWindowSize, lag, suspicious_threshold):
     return label, max_s
 
 
-def main():
+def main(configs):
     with open("benign_malicious_info.json", "r") as f:
         benign_malicious_info = json.load(f)
     results = {}
     trace_list = os.listdir("results/exp1")
 
-    for index, trace in enumerate(trace_list):
-        trace_path = "results/exp1/" + trace
-        index = trace.find(".tar.gz")
-        trace_name = trace[:index]
-        TRUTH = benign_malicious_info[trace_name]
-        logging.info(f"Starting for {trace_name} | {TRUTH}")
-        data = read_trace(trace_path)
-        label, max_s = apply_sliding_window(data, 50000, 1, 0.9)
-        logging.info(f"Label: {label}\tMax_Suspicious: {max_s}")
-        results[trace_name] = {
-            "Truth": TRUTH,
-            "Label": label,
-            "MaxSuspicious": max_s
-        }
+    with (tqdm(total=len(trace_list), desc="Evaluating") as pbar):
+        for index, trace in enumerate(trace_list):
+            trace_path = "results/exp1/" + trace
+            index = trace.find(".tar.gz")
+            trace_name = trace[:index]
+            TRUTH = benign_malicious_info[trace_name]
+
+            pbar.set_postfix(trace=trace_name)
+
+            data = read_trace(trace_path)
+            label, max_s = apply_sliding_window(
+                data,
+                configs.EVALUATION.window_size,
+                configs.EVALUATION.lag,
+                configs.EVALUATION.suspicious_threshold
+            )
+
+            # logging.info(f"Label: {label}\tMax_Suspicious: {max_s}")
+            results[trace_name] = {
+                "Truth": TRUTH,
+                "Label": label,
+                "MaxSuspicious": max_s
+            }
+
+            pbar.update(1)
+
+            if index % 15 == 0 or index == 1 or index == len(trace_list):
+                send_mail(f"Evaluating Continues {index}/{len(trace_list)}")
 
     with open("results/exp1/results.json", "w") as f:
         json.dump(results, f)
@@ -62,7 +78,11 @@ if __name__ == "__main__":
                 logging.StreamHandler()
             ]
         )
-        logging.info("***** Running Training *****")
-        main()
+        logging.info("***** Running Evaluation *****")
 
-        logging.info("***** End Training *****")
+        configs = load_configs("configs.yaml")
+        log_configs(configs)
+
+        main(configs)
+
+        logging.info("***** End Evaluation *****")

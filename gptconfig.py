@@ -20,6 +20,12 @@ class TrainingConfigs:
     gamma: float
 
 @dataclass
+class EvaluationConfigs:
+    window_size: int
+    suspicious_threshold: float
+    lag: int
+
+@dataclass
 class ModelConfigs:
     vocab_size: int
     n_layer: int
@@ -35,3 +41,4 @@ class Config:
     TRAINING: TrainingConfigs
     MODEL: ModelConfigs
     PREDICTION: PredictionConfigs
+    EVALUATION: EvaluationConfigs
