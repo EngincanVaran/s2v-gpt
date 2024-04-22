@@ -32,7 +32,8 @@ def main(configs):
     with open("benign_malicious_info.json", "r") as f:
         benign_malicious_info = json.load(f)
     results = {}
-    trace_list = os.listdir("results/exp1")
+
+    trace_list = [trace for trace in os.listdir("results/exp1") if ".tar.gz" in trace]
 
     with (tqdm(total=len(trace_list), desc="Evaluating") as pbar):
         for index, trace in enumerate(trace_list):
@@ -63,7 +64,7 @@ def main(configs):
             if index % 15 == 0 or index == 1 or index == len(trace_list):
                 send_mail(f"Evaluating Continues {index}/{len(trace_list)}")
 
-    with open("results/exp1/results.json", "w") as f:
+    with open(f"eval_results/exp1/eval_results_ws{configs.EVALUATION.window_size}_st{configs.EVALUATION.suspicious_threshold}.json", "w") as f:
         json.dump(results, f)
 
 

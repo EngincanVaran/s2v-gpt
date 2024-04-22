@@ -16,7 +16,7 @@ training_configs:
   gamma: 0.1
 
 evaluation_configs:
-  window_size: 50000
+  window_size: 5000
   suspicious_threshold: 0.9
   lag: 1
 
