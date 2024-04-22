@@ -61,7 +61,7 @@ def main(configs):
 
             pbar.update(1)
             if idx % 15 == 0 or idx == 1 or idx == len(trace_list):
-                send_mail(f"Evaluating Continues {index}/{len(trace_list)}")
+                send_mail(f"Evaluating Continues {idx}/{len(trace_list)}")
 
     with open(f"eval_results/exp1/eval_results_ws{configs.EVALUATION.window_size}_st{configs.EVALUATION.suspicious_threshold}.json", "w") as f:
         json.dump(results, f)
