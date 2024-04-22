@@ -39,7 +39,7 @@ def main():
         TRUTH = benign_malicious_info[trace_name]
         logging.info(f"Starting for {trace_name} - {TRUTH}")
         data = read_trace(trace_path)
-        label, max_s = apply_sliding_window(data, 10000, 1, 0.35)
+        label, max_s = apply_sliding_window(data, 50000, 1, 0.5)
         logging.info(f"Label: {label}\tMax_Suspicious: {max_s}")
         break
 
