@@ -36,7 +36,7 @@ def main(configs):
     trace_list = [trace for trace in os.listdir("results/exp1") if ".tar.gz" in trace]
 
     with (tqdm(total=len(trace_list), desc="Evaluating") as pbar):
-        for index, trace in enumerate(trace_list):
+        for idx, trace in enumerate(trace_list):
             trace_path = "results/exp1/" + trace
             index = trace.find(".tar.gz")
             trace_name = trace[:index]
@@ -61,7 +61,7 @@ def main(configs):
 
             pbar.update(1)
             break
-            if index % 15 == 0 or index == 1 or index == len(trace_list):
+            if idx % 15 == 0 or idx == 1 or idx == len(trace_list):
                 send_mail(f"Evaluating Continues {index}/{len(trace_list)}")
 
     with open(f"eval_results/exp1/eval_results_ws{configs.EVALUATION.window_size}_st{configs.EVALUATION.suspicious_threshold}.json", "w") as f:
