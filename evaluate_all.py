@@ -60,7 +60,6 @@ def main(configs):
             }
 
             pbar.update(1)
-            break
             if idx % 15 == 0 or idx == 1 or idx == len(trace_list):
                 send_mail(f"Evaluating Continues {index}/{len(trace_list)}")
 
