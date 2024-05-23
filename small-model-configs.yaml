@@ -1,0 +1,16 @@
+training_configs:
+  batch_size: 1024  # Larger batch size since the model is smaller
+  epochs: 3
+  eval_interval: 100
+  learning_rate: 1e-4  # Lower learning rate for stability
+  milestones: [1, 2]
+  gamma: 0.1
+
+model_configs:
+  vocab_size: 4096
+  n_layer: 6  # Fewer transformer layers
+  n_head: 8  # Fewer attention heads
+  n_embd: 512  # Smaller embedding size
+  block_size: 256  # Smaller context window
+  dropout: 0.1  # Add dropout for better generalization
+  bias: true

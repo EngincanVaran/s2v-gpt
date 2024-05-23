@@ -6,27 +6,24 @@ prediction_configs:
   batch_size: 20000
   top_k: 21
 
-training_configs:
-  # Basic training parameters
-  batch_size: 8 # 4096 # Number of samples processed before the model is updated
-  epochs: 5
-  eval_interval: 100
-  learning_rate: 0.001
-  milestones: [1, 4]
-  gamma: 0.1
-
 evaluation_configs:
   window_size: 10000
   suspicious_threshold: 0.7
   lag: 1
 
+training_configs:
+  batch_size: 1024  # Larger batch size since the model is smaller
+  epochs: 3
+  eval_interval: 100
+  learning_rate: 1e-3  # Lower learning rate for stability
+  milestones: [1, 2]
+  gamma: 0.1
+
 model_configs:
-  # Model configuration
-  vocab_size: 4096  # The size of the vocabulary
-  n_layer: 4  # The number of transformer layers
-  n_head: 4  # The number of attention heads in each transformer layer
-  n_embd: 128  # The dimensionality of embeddings and hidden layers
-  block_size: 32  # The maximum length of input sequences
-  # Regularization and optimization
-  dropout: 0  # Dropout rate to prevent overfitting
-  bias: true  # Whether to include bias terms in linear layers
+  vocab_size: 4096
+  n_layer: 4  # Fewer transformer layers
+  n_head: 4 # Fewer attention heads
+  n_embd: 128 # Smaller embedding size
+  block_size: 64  # Smaller context window
+  dropout: 0  # Add dropout for better generalization
+  bias: true

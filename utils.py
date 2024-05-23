@@ -86,7 +86,7 @@ def log_configs(config):
     logging.info("+" + "-" * (max_line_length + 2) + "+")
 
 
-def send_mail(body, subject="S2V-GPT Update!"):
+def send_mail(body, subject="A100 S2V-GPT Update!"):
     BOT_PASSWORD = "govfwswxpxwkoziq"
     BOT_EMAIL = "crypto.bot.penguin@gmail.com"
     EMAIL = "evaran@sabanciuniv.edu"

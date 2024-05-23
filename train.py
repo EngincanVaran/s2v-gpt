@@ -1,13 +1,12 @@
 import logging
-
+import os.path
+import json
 import torch
 from torch.optim import Adam
-from torch.optim.lr_scheduler import StepLR
-from torch.utils.data import DataLoader, random_split
+from torch.optim.lr_scheduler import StepLR, MultiStepLR
+from torch.utils.data import DataLoader
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 
-import utils
 from hex_dataset import HexDataset
 from model import GPT
 from utils import load_configs, log_configs, send_mail
@@ -53,70 +52,67 @@ def load_trace_files(path):
 def main(configs):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logging.info(f"Using device: {device}")
+    model_name = f"s2v_gpt_{configs.GLOBAL.exp_num}_latest.pt"
 
-    model = GPT(configs.MODEL)
+    DETAILS_JSON_PATH = f"experiments/exp{configs.GLOBAL.exp_num}/details.json"
+    DETAILS_JSON_FILE = open(DETAILS_JSON_PATH, "r")
+    DETAILS_JSON = json.load(DETAILS_JSON_FILE)
+    DETAILS_JSON_FILE.close()
+
+    if os.path.exists(f'./models/{model_name}'):
+        logging.info("Loading Model...")
+        model = torch.load(f'./models/{model_name}')
+    else:
+        logging.info("Creating Model...")
+        model = GPT(configs.MODEL)
+        torch.save(model, f'./models/s2v_gpt_{configs.GLOBAL.exp_num}_base.pt')
+
     model.to(device)
-
     logging.info(f"# Parameters: {model.get_num_params() / 1e6:.2f}M")
 
     TRAINING_SET_PATH = f"experiments/exp{configs.GLOBAL.exp_num}/training.set"
     EXP_TRACES = load_trace_files(TRAINING_SET_PATH)
 
     for index, trace in enumerate(EXP_TRACES):
-        optimizer = Adam(model.parameters(), lr=configs.TRAINING.learning_rate)
-        scheduler = StepLR(optimizer, step_size=configs.TRAINING.step_size, gamma=configs.TRAINING.gamma)
-
         index += 1
+        if DETAILS_JSON[trace]["trained"]:
+            logging.info(f"Train History: {DETAILS_JSON[trace]["train_history"]}")
+            logging.info(f"Model trained with {trace}, skipping...")
+            continue
+
+        optimizer = Adam(
+            model.parameters(),
+            lr=float(configs.TRAINING.learning_rate)
+        )
+        scheduler = MultiStepLR(
+            optimizer,
+            milestones=configs.TRAINING.milestones,
+            gamma=configs.TRAINING.gamma,
+        )
 
         logging.info(f"Trace {index}/{len(EXP_TRACES)}")
-        logging.info(f"Starting for {trace}")
+        logging.info(f"Starting for {trace}...")
         trace_file_path = TRACES_PATH + "/" + trace
-
-        # Assuming HexDataset is already defined and initialized
+        logging.info("Loading Data...")
         dataset = HexDataset(
             file_path=trace_file_path,
             block_size=configs.MODEL.block_size
         )
-        logging.info("Data Loaded!")
 
-        # Define the sizes of the splits
-        total_size = len(dataset)
-        train_size = int(configs.TRAINING.data_split * total_size)  # 80% of the dataset for training
-        validation_size = total_size - train_size  # The rest for validation
-
-        # Split the dataset
-        train_dataset, validation_dataset = random_split(dataset, [train_size, validation_size])
-
-        # Create DataLoaders for both training and validation sets
+        # Create DataLoaders for training
         train_dataloader = DataLoader(
-            train_dataset,
+            dataset,
             batch_size=configs.TRAINING.batch_size,
             shuffle=True,
             num_workers=4,  # Adjust based on your system's specification
-            pin_memory=True,  # If using a GPU, this can improve transfer speeds,
+            pin_memory=True,  # If using a GPU, this can improve transfer speeds
             pin_memory_device="cuda",
         )
 
-        if configs.TRAINING.data_split != 1:
-            validation_dataloader = DataLoader(
-                validation_dataset,
-                batch_size=configs.TRAINING.batch_size,
-                shuffle=False,
-                num_workers=4,  # Consistency with train_dataloader
-                pin_memory=True,  # Helps with faster data transfer to GPU
-                pin_memory_device="cuda",
-            )
-            logging.info(f"Validation Size: {len(validation_dataloader)}")
-
         logging.info("Starting Training...")
-
-        history = {}
-
+        history = []
         for iter in range(configs.TRAINING.epochs):
             model.train()
-            val_loss = float("inf")
-            history[iter] = []
-
             with (tqdm(total=len(train_dataloader), desc=f"Epoch {iter}:") as pbar):
                 for batch_idx, (Xb, Yb) in enumerate(train_dataloader):
                     Xb, Yb = Xb.to(device), Yb.to(device)
@@ -125,32 +121,30 @@ def main(configs):
                     loss.backward()
                     optimizer.step()
                     train_loss = loss.item()
-                    history[iter].append(train_loss)
 
-                    if (
-                        ((batch_idx % configs.TRAINING.eval_interval == 0 and batch_idx > 0) or
-                        (batch_idx == len(train_dataloader) - 1)) and configs.TRAINING.data_split != 1
-                    ):
-                        losses = estimate_loss(model, train_dataloader, validation_dataloader, device)
-                        val_loss = f"{losses['val']:.4f}"
-                        train_loss = f"{losses['train']:.4f}"
                     pbar.update(1)
-                    pbar.set_postfix(loss=train_loss, val_loss=val_loss)
-
-            plt.figure(figsize=(10, 6))
-            plt.plot(history[iter], label='Loss')
-            plt.title('Training Loss')
-            plt.xlabel('Iterations')
-            plt.ylabel('Loss')
-            plt.legend()
-            # Save the plot to a file
-            plt.savefig(f'training_loss_{iter}.png')
+                    pbar.set_postfix(loss=train_loss)
 
             scheduler.step()
-            # losses = estimate_loss(model, train_dataloader, validation_dataloader, configs.TRAINING.eval_interval, device)
-            # logging.info(f"Final: train loss {losses['train']:.4f} | val loss {losses['val']:.4f}")
-        break
-    send_mail("S2V-GPT Update!", "Training finished!")
+            logging.info(f"Learning Rate: {scheduler.get_last_lr()}")
+            history.append(train_loss)
+            logging.info(f'\tFinal Train Loss: {train_loss:.4f}')
+
+        DETAILS_JSON[trace]["train_history"] = history
+
+        logging.info("Training Finished! Saving model...")
+        torch.save(model, f'./models/{model_name}')
+
+        DETAILS_JSON[trace]["trained"] = True
+        with open(f"experiments/exp{configs.GLOBAL.exp_num}/details.json", "w") as f:
+            json.dump(DETAILS_JSON, f)
+
+        if index % 15 == 0 or index == 1 or index == len(EXP_TRACES):
+            send_mail(f"Training continues {index}/{len(EXP_TRACES)}")
+
+    send_mail(f"Model training done!")
+    with open("experiments/exp1/details.json", "w") as f:
+        json.dump(DETAILS_JSON, f)
 
 
 if __name__ == "__main__":
