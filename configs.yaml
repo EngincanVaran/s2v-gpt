@@ -2,14 +2,15 @@ global_configs:
   exp_num: 1
 
 prediction_configs:
-  max_workers: 5
-  batch_size: 20000
-  top_k: 21
+  max_workers: 20
+  block_size: 32
+  batch_size: 50000
+  top_k: 11
 
 evaluation_configs:
-  window_size: 10000
+  window_size: 50000
   suspicious_threshold: 0.7
-  lag: 1
+  lag: 50000
 
 training_configs:
   batch_size: 1024  # Larger batch size since the model is smaller

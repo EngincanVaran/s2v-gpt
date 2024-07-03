@@ -103,12 +103,32 @@ def send_mail(body, subject="A100 S2V-GPT Update!"):
         smtp.sendmail(BOT_EMAIL, EMAIL, msg)
 
 
-def find_order_of_element(array, index):
-    # Sort the array in descending order while keeping track of original indices
-    sorted_indices = np.argsort(array)
-    print(sorted_indices)
+def run_length_encode(data):
+    encoding = []
+    prev_char = data[0]
+    count = 1
 
-    # Find the order of the element with the given index
-    order = np.where(sorted_indices == index)[0][0] + 1  # Adding 1 to make it 1-based indexing
+    for char in data[1:]:
+        if char == prev_char:
+            count += 1
+        else:
+            encoding.append(f"{prev_char}{count}")
+            prev_char = char
+            count = 1
+    encoding.append(f"{prev_char}{count}")
 
-    return order
+    return ''.join(encoding)
+
+
+def run_length_decode(encoded_data):
+    decoded = []
+    i = 0
+    while i < len(encoded_data):
+        char = encoded_data[i]
+        count = ''
+        i += 1
+        while i < len(encoded_data) and encoded_data[i].isdigit():
+            count += encoded_data[i]
+            i += 1
+        decoded.append(char * int(count))
+    return ''.join(decoded)

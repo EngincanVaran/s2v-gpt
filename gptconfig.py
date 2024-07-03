@@ -7,6 +7,7 @@ class GlobalConfigs:
 @dataclass
 class PredictionConfigs:
     max_workers: int
+    block_size: int
     batch_size: int
     top_k: int
 
