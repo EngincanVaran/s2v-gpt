@@ -3,3 +3,5 @@ export PATH="/bin:/usr/bin:$PATH"
 Connecting to the VM:
 - ssh -i ~/.ssh/s2v-cpu.pem ubuntu@129.192.82.135
 - ssh -i ~/.ssh/s2v.pem ubuntu@129.192.82.114
+
+df
