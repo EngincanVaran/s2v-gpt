@@ -5,7 +5,7 @@ import pandas as pd
 
 
 def main():
-    with open(f"eval_results/exp1_cusum/results_10000_0.2_5_0.25.json", "r") as f:
+    with open(f"eval_results/exp1_cusum/results_50000_0.2_5_0.2.json", "r") as f:
         results = json.load(f)
 
     truths = []
